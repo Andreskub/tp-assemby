@@ -7,16 +7,16 @@ extern sscanf
 
 section .data
 
-    msjIngreseConjuntos      db  "Ingrese cantidad de conjuntos por teclado",0
+    msjIngreseConjuntos      db  "Ingrese la cantidad de conjuntos:",0
     formatoNumero            db  "%lli",0
-    ;msjImprimir              db  "%lli",10,0
+    imprimir                 db  "%lli",10,0
+    msjIngreseCaracter       db  "Ingrese un numero:",0
 
     msjRangoInvalido         db  "El rango ingresado es invalido",0
 
 section .bss
 
     buffer          resb    500
-    matriz          resb    1
     cantConjuntos   resq    1
     conjuntoA       resb    500
 
@@ -45,7 +45,7 @@ preguntarCantidadDeConjuntos:
     add     rsp,32
 
     ;ESTO IMPRIME EL NUMERO INGRESADO
-    ;mov     rcx,msjImprimir
+    ;mov     rcx,imprimir
     ;mov     rdx,[cantConjuntos]
     ;sub     rsp,32
     ;call    printf
@@ -57,8 +57,39 @@ preguntarCantidadDeConjuntos:
     je      preguntarCantidadDeConjuntos
 
 
+cargarConsjuntos:
+
+
+
+preguntarCaracter:
+
+    mov     rcx,msjIngreseCaracter
+    sub     rsp,32
+    call    puts
+    add     rsp,32
+
+    mov     rcx,buffer
+    sub     rsp,32
+    call    gets
+    add     rsp,32
+
+    mov     rcx,buffer
+    mov     rdx,formatoNumero
+    mov     r8,conjuntoA
+    sub     rsp,32
+    call    sscanf
+    add     rsp,32
+
     ret
 
+
+;contador: ;A desarrollar
+;    mov     rsi,0
+;
+;    cmp     byte[texto + rsi],0
+;    je      finString               ;Fin de cadena de texto
+;
+;    ret
 
 validarRango:
 

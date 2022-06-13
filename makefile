@@ -10,7 +10,8 @@ compile:
 	$(AS) -f $(NASMFLAGS) $(MAIN) -o $(OBJETO)
 	$(CC) ./$(OBJETO) -o $(EXEC)
 
-run: compile			
+run: compile
+	cls	
 	- ./$(EXEC)
 
 zip: 
