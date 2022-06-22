@@ -17,8 +17,8 @@ section .data
     imprimir2                db  "Completar conjunto %lli",10,0
     
     ;Prueba
-    imprimirRsi              db  "rsi: %lli",10,0
-    imprimirRax              db  "rax: %lli",10,0
+    imprimirExterno          db  "Externo: %lli",10,0
+    imprimirInterno          db  "Interno: %lli",10,0
     imprimirAl               db  "[conjuntoA + rsi]: %c",10,0
     
 
@@ -74,16 +74,25 @@ preguntarCantidadDeConjuntos:
 
 loopConjuntoA:
 
+    ;Veo ContadorExterno
+    mov     rcx,imprimirExterno
+    mov     rdx,[contadorExterno]
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
     inc     qword[contadorExterno]
 
-    mov     rsi,qword[contadorInterno]
-    mov     qword[rsi],0
+    
+
+    ;mov     rsi,qword[contadorInterno]
+    mov     qword[contadorInterno],0
     
     mov     rsi,qword[contadorExterno]
     mov     al,byte[conjuntoA + rsi]
 
-    ;Veo Contador
-    mov     rcx,imprimirRsi
+    ;Veo ContadorExterno
+    mov     rcx,imprimirExterno
     mov     rdx,[contadorExterno]
     sub     rsp,32
     call    printf
@@ -95,12 +104,19 @@ loopConjuntoA:
 
     loopConjuntoB:
         mov     rsi,qword[contadorInterno]
-        mov     bl,[conjuntoB + rsi]
+        mov     bl,byte[conjuntoB + rsi]
+
+        ;Veo ContadorInterno
+        mov     rcx,imprimirInterno
+        mov     rdx,[contadorInterno]
+        sub     rsp,32
+        call    printf
+        add     rsp,32
 
         inc     qword[contadorInterno]
 
         mov     rsi,qword[contadorInterno]
-        mov     bh,[conjuntoB + rsi]
+        mov     bh,byte[conjuntoB + rsi]
 
         cmp     al,bl
         je      compararSegundoByte
