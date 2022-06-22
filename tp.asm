@@ -16,8 +16,16 @@ section .data
     imprimir                 db  "%lli",10,0
     imprimir2                db  "Completar conjunto %lli",10,0
     
+    ;Prueba
+    imprimirRsi              db  "rsi: %lli",10,0
+    imprimirRax              db  "rax: %lli",10,0
+    imprimirAl               db  "[conjuntoA + rsi]: %c",10,0
+    
 
     msjRangoInvalido         db  "El rango ingresado es invalido",0
+
+    contadorExterno          dq  0
+    contadorInterno          dq  0
 
 section .bss
 
@@ -61,27 +69,39 @@ preguntarCantidadDeConjuntos:
     mov     rsi,0
     call    cargarConjuntos
 
-    mov     rsi,-1
+    mov     qword[contadorExterno],-1
     call    loopConjuntoA
 
 loopConjuntoA:
 
-    inc     rsi
-    mov     rax,0
-    mov     al,byte[conjuntoA + rsi]
-    inc     rsi
-    mov     ah,byte[conjuntoA + rsi]
+    inc     qword[contadorExterno]
+
+    mov     rsi,qword[contadorInterno]
+    mov     qword[rsi],0
     
+    mov     rsi,qword[contadorExterno]
+    mov     al,byte[conjuntoA + rsi]
+
+    ;Veo Contador
+    mov     rcx,imprimirRsi
+    mov     rdx,[contadorExterno]
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
+    inc     qword[contadorExterno]
+    mov     rsi,qword[contadorExterno]
+    mov     ah,byte[conjuntoA + rsi]
 
     loopConjuntoB:
-        
-        mov     bl,[conjuntoB + rax]
+        mov     rsi,qword[contadorInterno]
+        mov     bl,[conjuntoB + rsi]
 
-        inc     rax
+        inc     qword[contadorInterno]
 
-        mov     bh,[conjuntoB + rax]
+        mov     rsi,qword[contadorInterno]
+        mov     bh,[conjuntoB + rsi]
 
-        
         cmp     al,bl
         je      compararSegundoByte
         
@@ -90,7 +110,8 @@ loopConjuntoA:
         cmp     bh,0
         je      finNoIguales
 
-        inc     rax
+        inc     qword[contadorInterno]
+
         jmp     loopConjuntoB
 
         compararSegundoByte:
