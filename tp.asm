@@ -8,16 +8,31 @@ extern sscanf
 section .data
 
     msjIngreseConjuntos      db  "Ingrese la cantidad de conjuntos:",0
-    msjIngreseConjunto       db  "Ingrese el conjutno:",0
+    msjIngreseConjunto       db  "Ingrese el conjutno %lli:",10,0
     
     formatoNumero            db  "%lli",0
     formatoConjunto          db  "%s",0
 
     imprimir                 db  "%lli",10,0
-    imprimir2                db  "Completar conjunto %lli",10,0
+    
+    imprimirConjA            db  "Conjunto A  %s",10,0
+    imprimirConjB            db  "Conjunto B  %s",10,0
+    imprimir4                db  "Paso por aca %lli",10,0
+    
+    ;Prueba
+    imprimirExterno          db  "Externo: %lli",10,0
+    imprimirInterno          db  "Interno: %lli",10,0
+    imprimirExt              db  "[conjuntoExt + rsi]: %c",10,0
+    imprimirInt              db  "[conjuntoInt + rsi]: %c",10,0
+
+    
     
 
-    msjRangoInvalido         db  "El rango ingresado es invalido",0
+    msjRangoInvalido         db  "El rango ingresado es invalido",10,0
+    msjFinNoIguales          db  "Los conjuntos A y B no son iguales",10,0
+
+    contadorExterno          dq  0
+    contadorInterno          dq  0
 
 section .bss
 
@@ -61,48 +76,72 @@ preguntarCantidadDeConjuntos:
     mov     rsi,0
     call    cargarConjuntos
 
-    mov     rsi,-1
+    mov     rcx,imprimirConjA
+    mov     rdx,conjuntoA
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
+    mov     rcx,imprimirConjB
+    mov     rdx,conjuntoB
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
+    mov     qword[contadorExterno],-1
     call    loopConjuntoA
 
 loopConjuntoA:
 
-    inc     rsi
-    mov     rax,0
-    mov     al,byte[conjuntoA + rsi]
-    inc     rsi
-    mov     ah,byte[conjuntoA + rsi]
+    inc     qword[contadorExterno]      ;Inicializo contador externo en 0
+
+    mov     qword[contadorInterno],-1    ;Inicializo contador interno en -1
     
+    mov     rsi,qword[contadorExterno]
+    mov     al,byte[conjuntoA + rsi]    ;Almaceno 1er caracter del elemento
+
+    inc     qword[contadorExterno]      ;Incremento contador externo
+
+    mov     rsi,qword[contadorExterno]
+    mov     ah,byte[conjuntoA + rsi]    ;Almaceno 2do caracter del elemento
 
     loopConjuntoB:
-        
-        mov     bl,[conjuntoB + rax]
+        inc     qword[contadorInterno]      ;Incremento contador interno
 
-        inc     rax
+        mov     rsi,qword[contadorInterno]
+        mov     bl,byte[conjuntoB + rsi]    ;Almaceno 1er caracter del elemento
 
-        mov     bh,[conjuntoB + rax]
+        inc     qword[contadorInterno]      ;Incremento contador interno
 
-        
-        cmp     al,bl
-        je      compararSegundoByte
-        
-        cmp     bl,0
+        mov     rsi,qword[contadorInterno]
+        mov     bh,byte[conjuntoB + rsi]    ;Almaceno 2do caracter del elemento
+
+        cmp     al,bl                       ;Comparo los dos primeros caracteres
+        je      compararSegundoByte         ;Si son iguales evaluo el segundo caracter del elemento
+
+        cmp     bl,0                        ;Condicion si es salto de linea (ultimo caracter)
         je      finNoIguales
-        cmp     bh,0
+        cmp     bh,0                        ;Condicion si es salto de linea (ultimo caracter)
         je      finNoIguales
 
-        inc     rax
         jmp     loopConjuntoB
 
         compararSegundoByte:
-            cmp     ah,bh
-            je      loopConjuntoA
+            cmp     ah,bh                   ;Si los 2 ultimos caracteres son iguales
+            je      loopConjuntoA           ;significa que el elemento es el mismo y sigo con el siguiente
 
-            jmp     loopConjuntoB
+            jmp     loopConjuntoB           ;Sino, sigo recorriendo
     
         
 
 
 finNoIguales:
+    
+    ;Veo ContadorInterno
+    mov     rcx,msjFinNoIguales
+    sub     rsp,32
+    call    printf
+    add     rsp,32
     
     ret
 
@@ -114,7 +153,7 @@ cargarConjuntos:
 
     inc     rsi
 
-    mov     rcx,imprimir2
+    mov     rcx,msjIngreseConjunto
     mov     rdx,rsi
     sub     rsp,32
     call    printf
@@ -122,22 +161,34 @@ cargarConjuntos:
 
 
     cmp	    rsi,1
-    jmp     completarConjuntoA
+    je      completarConjuntoA
     cmp	    rsi,2
-    jmp     completarConjuntoB
+    je      completarConjuntoB
     cmp	    rsi,3
-    jmp     completarConjuntoC
+    je      completarConjuntoC
     cmp	    rsi,4
-    jmp     completarConjuntoD
+    je      completarConjuntoD
     cmp	    rsi,5
-    jmp     completarConjuntoE
+    je      completarConjuntoE
     cmp	    rsi,6
-    jmp     completarConjuntoF
+    je      completarConjuntoF
 
     continuarConjuntos:
 
     cmp     rsi,qword[cantConjuntos]
     jl      cargarConjuntos
+
+    mov     rcx,imprimirConjA
+    mov     rdx,conjuntoA
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
+    mov     rcx,imprimirConjB
+    mov     rdx,conjuntoB
+    sub     rsp,32
+    call    printf
+    add     rsp,32
 
     ret
 
