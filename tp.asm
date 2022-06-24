@@ -17,11 +17,12 @@ section .data
     
     imprimirConjA            db  "Conjunto A  %s",10,0
     imprimirConjB            db  "Conjunto B  %s",10,0
-    imprimir4                db  "Paso por aca %lli",10,0
+    imprimir4                db  "Paso por aca",10,0
+    imprimir5                db  "Paso por aca 2",10,0
     
     ;Prueba
-    imprimirExterno          db  "Externo: %lli",10,0
-    imprimirInterno          db  "Interno: %lli",10,0
+    imprimirExterno          db  "Cont Externo: %lli",10,0
+    imprimirInterno          db  "Cont Interno: %lli",10,0
     imprimirExt              db  "[conjuntoExt + rsi]: %c",10,0
     imprimirInt              db  "[conjuntoInt + rsi]: %c",10,0
 
@@ -33,6 +34,9 @@ section .data
 
     contadorExterno          dq  0
     contadorInterno          dq  0
+
+    reg1                     dq  0
+    reg2                     dq  0
 
 section .bss
 
@@ -76,34 +80,26 @@ preguntarCantidadDeConjuntos:
     mov     rsi,0
     call    cargarConjuntos
 
-    mov     rcx,imprimirConjA
-    mov     rdx,conjuntoA
-    sub     rsp,32
-    call    printf
-    add     rsp,32
-
-    mov     rcx,imprimirConjB
-    mov     rdx,conjuntoB
-    sub     rsp,32
-    call    printf
-    add     rsp,32
-
     mov     qword[contadorExterno],-1
     call    loopConjuntoA
+
+    ret
 
 loopConjuntoA:
 
     inc     qword[contadorExterno]      ;Inicializo contador externo en 0
-
     mov     qword[contadorInterno],-1    ;Inicializo contador interno en -1
     
     mov     rsi,qword[contadorExterno]
     mov     al,byte[conjuntoA + rsi]    ;Almaceno 1er caracter del elemento
+    mov     byte[reg1],al
+
 
     inc     qword[contadorExterno]      ;Incremento contador externo
 
     mov     rsi,qword[contadorExterno]
     mov     ah,byte[conjuntoA + rsi]    ;Almaceno 2do caracter del elemento
+    mov     byte[reg2],ah
 
     loopConjuntoB:
         inc     qword[contadorInterno]      ;Incremento contador interno
@@ -116,19 +112,34 @@ loopConjuntoA:
         mov     rsi,qword[contadorInterno]
         mov     bh,byte[conjuntoB + rsi]    ;Almaceno 2do caracter del elemento
 
-        cmp     al,bl                       ;Comparo los dos primeros caracteres
+
+        cmp     bl,byte[reg1]               ;Comparo los dos primeros caracteres
         je      compararSegundoByte         ;Si son iguales evaluo el segundo caracter del elemento
 
         cmp     bl,0                        ;Condicion si es salto de linea (ultimo caracter)
         je      finNoIguales
+
         cmp     bh,0                        ;Condicion si es salto de linea (ultimo caracter)
         je      finNoIguales
+
+
+        ;Condicion de que si largo Conjunto B es igual al 
 
         jmp     loopConjuntoB
 
         compararSegundoByte:
-            cmp     ah,bh                   ;Si los 2 ultimos caracteres son iguales
+            mov     rcx,imprimir5
+            sub     rsp,32
+            call    printf
+            add     rsp,32
+
+            cmp     bh,byte[reg2]                   ;Si los 2 ultimos caracteres son iguales
             je      loopConjuntoA           ;significa que el elemento es el mismo y sigo con el siguiente
+
+            mov     rcx,imprimir5
+            sub     rsp,32
+            call    printf
+            add     rsp,32
 
             jmp     loopConjuntoB           ;Sino, sigo recorriendo
     
@@ -144,8 +155,6 @@ finNoIguales:
     add     rsp,32
     
     ret
-
-
 
 
 ; FUNCIONES DE CARGA
