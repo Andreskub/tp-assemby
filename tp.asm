@@ -19,6 +19,7 @@ section .data
     imprimirConjB            db  "Conjunto B  %s",10,0
     imprimir4                db  "Paso por aca",10,0
     imprimir5                db  "Paso por aca 2",10,0
+    imprimirVacio            db  "",0
     
     ;Prueba
     imprimirExterno          db  "Cont Externo: %lli",10,0
@@ -26,7 +27,12 @@ section .data
     imprimirExt              db  "[conjuntoExt + rsi]: %c",10,0
     imprimirInt              db  "[conjuntoInt + rsi]: %c",10,0
 
-    
+    imprimirExterno1          db  "Cont Externo 1: %lli",10,0
+    imprimirExterno2          db  "Cont Externo 2: %lli",10,0
+    imprimirExterno3          db  "Cont Externo 3: %lli",10,0
+    imprimirExterno4          db  "Cont Externo 4: %lli",10,0
+    imprimirExterno5          db  "Cont Externo 5: %lli",10,0
+    imprimirExterno6          db  "Cont Externo 6: %lli",10,0
     
 
     msjRangoInvalido         db  "El rango ingresado es invalido",10,0
@@ -36,6 +42,7 @@ section .data
     longitudDeConjunto       db  0
     contadorExterno          dq  0
     contadorInterno          dq  0
+    contadorExtra            dq  0
 
     registro1                dq  0
     registro2                dq  0
@@ -100,56 +107,60 @@ loopConjuntoA:
     mov     al,byte[conjuntoA + rsi]    ;Almaceno 1er caracter del elemento
     mov     byte[registro1],al
 
-    cmp     al,0              ;Comparo los dos primeros caracteres
+    mov     qword[contadorExtra],rsi
+    
+    cmp     byte[registro1],0              ;Comparo los dos primeros caracteres
     je      verificarLongitud
 
     inc     qword[contadorExterno]      ;Incremento contador externo
 
     mov     rsi,qword[contadorExterno]
     mov     ah,byte[conjuntoA + rsi]    ;Almaceno 2do caracter del elemento
-    mov     byte[registro2],ah
+    mov     byte[registro2],ah 
+
+    cmp     byte[registro2],0              ;Comparo los dos primeros caracteres
+    je      verificarLongitud
 
     loopConjuntoB:
+        
         inc     qword[contadorInterno]      ;Incremento contador interno
 
         mov     rsi,qword[contadorInterno]
         mov     bl,byte[conjuntoB + rsi]    ;Almaceno 1er caracter del elemento
+
+        cmp     bl,0                        ;Condicion si es salto de linea (ultimo caracter)
+        je      finNoIguales
 
         inc     qword[contadorInterno]      ;Incremento contador interno
 
         mov     rsi,qword[contadorInterno]
         mov     bh,byte[conjuntoB + rsi]    ;Almaceno 2do caracter del elemento
 
+        cmp     bh,0                        ;Condicion si es salto de linea (ultimo caracter)
+        je      finNoIguales
 
         cmp     bl,byte[registro1]               ;Comparo los dos primeros caracteres
         je      compararSegundoByte         ;Si son iguales evaluo el segundo caracter del elemento
 
-        cmp     bl,0                        ;Condicion si es salto de linea (ultimo caracter)
-        je      finNoIguales
-
-        ;cmp     bh,0                        ;Condicion si es salto de linea (ultimo caracter)
-        ;je      finNoIguales
-
         jmp     loopConjuntoB
 
         compararSegundoByte:
-
+            
             cmp     bh,byte[registro2]                   ;Si los 2 ultimos caracteres son iguales
             je      loopConjuntoA           ;significa que el elemento es el mismo y sigo con el siguiente
 
             jmp     loopConjuntoB           ;Sino, sigo recorriendo
     
 
-longitudConjutno:
+longitudConjunto:
 
     inc     qword[longitudDeConjunto]
 
     mov     rsi,qword[longitudDeConjunto]       
-    ;mov     al,byte[conjuntoLong + rsi]
     mov     al,byte[conjuntoA + rsi]
 
     cmp     al,0                                ;Comparo si no es fin de cadena
-    jne     longitudConjutno                    ;Si no es igual sigo recorriendo y sumando
+    jne     longitudConjunto                    ;Si no es igual sigo recorriendo y sumando
 
     ret
 
@@ -157,27 +168,21 @@ verificarLongitud:
 
     mov     qword[longitudDeConjunto],-1        ;Inicializo contador en -1
 
-    ;mov     al,byte[conjuntoA]                 ;Muevo conjunto a variable para utilizar en funcion
-    ;mov     byte[conjuntoLong],al
+    call    longitudConjunto                    ;Evaluo longitud de conjunto
 
-    mov     rcx,imprimir4
-    sub     rsp,32
-    call    printf
-    add     rsp,32
+    mov     rax,qword[longitudDeConjunto]
+    mov     qword[auxIndice],rax
 
-    call    longitudConjutno                    ;Evaluo longitud de conjunto
+    mov     rbx,qword[contadorExtra]
 
-    mov     al,byte[longitudConjutno]
-    mov     byte[auxIndice],al
+    cmp     rbx,qword[auxIndice]
+    jne     finNoIguales
 
-    cmp     byte[auxIndice],contadorExterno      ;Comparo longitud obtenida con contador
-    jne     finNoIguales                        ;Si son distintos el conjunto no se recorrio completo por lo cual no son iguales
+    ;mov     al,byte[longitudDeConjunto]
+    ;mov     byte[auxIndice],al
 
-    mov     rcx,imprimir4
-    sub     rsp,32
-    call    printf
-    add     rsp,32
-
+    ;cmp     byte[auxIndice],contadorExterno      ;Comparo longitud obtenida con contador
+    ;jne     finNoIguales                        ;Si son distintos el conjunto no se recorrio completo por lo cual no son iguales
 
     mov     rcx,msjConjuntosIguales             ;Sino, los conjuntos son iguales
     sub     rsp,32
@@ -187,9 +192,8 @@ verificarLongitud:
     ret 
 
 finNoIguales:
-    
-    ;Veo ContadorInterno
-    mov     rcx,msjConjuntosDistintos
+
+    mov     rcx,msjConjuntosDistintos       ;Imprimo mensaje de error
     sub     rsp,32
     call    printf
     add     rsp,32
