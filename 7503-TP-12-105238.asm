@@ -7,11 +7,6 @@
 ;   -> Para las operaciones de Conjuntos, el rango minimo de Conjuntos es 2
 ;
 
-
-;REVISAR CALL Y JMP
-
-;EL CALL NECESITA UN RET
-
 global main
 extern gets
 extern puts
@@ -46,20 +41,6 @@ section .data
     msjConjuntoIncluido2     db  "< El conjunto B esta incluido en A >",10,0
     msjConjuntoNoIncluido    db  "Error! Tanto el conjunto A como B no poseen inclusion",10,0
     msjConjuntoUnion         db  "< La union de A y B es: %s >",10,0
-    
-    ;Prueba
-    imprimir                 db  "%lli",10,0
-    
-    imprimirConjA            db  "Conjunto A  %s",10,0
-    imprimirConjB            db  "Conjunto B  %s",10,0
-    imprimir4                db  "Paso por aca",10,0
-    imprimir5                db  "Paso por aca 2",10,0
-    
-    imprimirExterno          db  "Cont Externo: %lli",10,0
-    imprimirInterno          db  "Cont Interno: %lli",10,0
-    imprimirExt              db  "[conjuntoExt + rsi]: %c",10,0
-    imprimirInt              db  "[conjuntoInt + rsi]: %c",10,0
-    ;
 
     longitudDeConjunto       dq  0
     contadorExterno          dq  0
