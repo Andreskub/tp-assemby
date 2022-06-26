@@ -30,6 +30,7 @@ section .data
     
     formatoNumero            db  "%lli",0
     formatoConjunto          db  "%40s",0       ;Solo toma los primeros 40 caracteres
+    formatoElemento          db  "%2s",0
 
     msjRangoInvalido         db  "Error! El rango ingresado es invalido",10,0
     msjElementoPertenece     db  "< El Elemento pertenece al conjunto >",10,0
@@ -54,7 +55,7 @@ section .data
     imprimirInt              db  "[conjuntoInt + rsi]: %c",10,0
     ;
 
-    longitudDeConjunto       db  0
+    longitudDeConjunto       dq  0
     contadorExterno          dq  0
     contadorInterno          dq  0
     contadorExtra            dq  0
@@ -71,15 +72,15 @@ section .bss
     buffer          resb    500
     cantConjuntos   resq    1
     operacion       resq    1
-    conjuntoA       resb    500
-    conjuntoB       resb    500
-    conjuntoC       resb    500
-    conjuntoD       resb    500
-    conjuntoE       resb    500
-    conjuntoF       resb    500
-    ElementoA       resb    500
+    conjuntoA       resb    41
+    conjuntoB       resb    41
+    conjuntoC       resb    41
+    conjuntoD       resb    41
+    conjuntoE       resb    41
+    conjuntoF       resb    41
+    ElementoA       resb    3
 
-    conjuntoLong    resb    500
+    conjuntoLong    resb    41
 
 
 section .text
@@ -125,15 +126,21 @@ preguntarOperacion:
     ret
 
 handlePertenencia:
-    
     mov     rcx,msjIngreseConjunto2
     sub     rsp,32
     call    printf
     add     rsp,32
 
-    mov     rcx,conjuntoA
+    mov     rcx,buffer
     sub     rsp,32
     call    gets
+    add     rsp,32
+
+    mov     rcx,buffer
+    mov     rdx,formatoConjunto
+    mov     r8,conjuntoA
+    sub     rsp,32
+    call    sscanf
     add     rsp,32
 
     mov     rcx,msjIngreseElemento
@@ -141,9 +148,16 @@ handlePertenencia:
     call    printf
     add     rsp,32
 
-    mov     rcx,ElementoA
+    mov     rcx,buffer
     sub     rsp,32
     call    gets
+    add     rsp,32
+
+    mov     rcx,buffer
+    mov     rdx,formatoElemento
+    mov     r8,ElementoA
+    sub     rsp,32
+    call    sscanf
     add     rsp,32
 
     mov     qword[contadorExtra],0
@@ -154,7 +168,6 @@ handlePertenencia:
     ret
 
 handleIgualdad:
-
     call    preguntarCantidadDeConjuntos    ;Cargo conjuntos
 
     mov     qword[contadorExtra],0
@@ -165,7 +178,6 @@ handleIgualdad:
     ret
 
 handleInclusion:
-
     call    preguntarCantidadDeConjuntos    ;Cargo conjuntos
 
     mov     qword[contadorExtra],0
@@ -181,7 +193,6 @@ handleUnion:
 
 
 preguntarCantidadDeConjuntos:
-
     mov     rcx,msjIngreseCantConjuntos
     sub     rsp,32
     call    puts
@@ -232,7 +243,6 @@ pertenenciaDeElemento:
     je      finElementoNoPertence
 
     loopPertenenciaDeElemento:
-
         mov     bl,byte[ElementoA]                  ;Almaceno 1er caracter del elemento
 
         cmp     bl,0                                ;Condicion si es salto de linea (ultimo caracter)
@@ -250,14 +260,12 @@ pertenenciaDeElemento:
         jmp     pertenenciaDeElemento               ;Sino, sigo recorriendo
 
         compararSegundoBytePertenencia:
-
             cmp     bh,byte[registro2]              ;Si los 2 ultimos caracteres son iguales
             je      finElementoPertenece            ;El elemento pertenece a Conjunto
 
             jmp     pertenenciaDeElemento           ;Sino, sigo recorriendo
 
 finElementoNoPertence:
-
     mov     rcx,msjElementoNoPertenece      ;Imprimo mensaje de error
     sub     rsp,32
     call    printf
@@ -266,7 +274,6 @@ finElementoNoPertence:
     ret
 
 finElementoPertenece:
-
     mov     rcx,msjElementoPertenece        ;Imprimo mensaje de salida ok
     sub     rsp,32
     call    printf
@@ -296,7 +303,6 @@ inclusionDeConjuntos:
     je      verificarInlusion
 
     loopConjuntoBInc:
-
         inc     qword[contadorInterno]      ;Incremento contador interno
 
         mov     rsi,qword[contadorInterno]
@@ -319,7 +325,6 @@ inclusionDeConjuntos:
         jmp     loopConjuntoBInc
 
         compararSegundoByteInc:
-
             cmp     bh,byte[registro2]              ;Si los 2 ultimos caracteres son iguales
             add     qword[contadorIncluidos],2      ;Sumo exitoso
 
@@ -333,7 +338,6 @@ inclusionDeConjuntos:
 
 
 verificarInlusion:
-
     mov     qword[longitudDeConjunto],-1        ;Inicializo contador en -1
 
     mov     rcx,conjuntoA                       ;Muevo conjunto a evaluar a un registro
@@ -356,7 +360,6 @@ verificarInlusion:
     ret
 
 verificarInlusion2:
-
     mov     qword[longitudDeConjunto],-1
     mov     rcx,conjuntoB                       ;Muevo conjunto a evaluar a un registro
 
@@ -378,7 +381,6 @@ verificarInlusion2:
     ret
 
 finNoIncluido:
-
     mov     rcx,msjConjuntoNoIncluido       ;Imprimo mensaje de error
     sub     rsp,32
     call    printf
@@ -389,7 +391,6 @@ finNoIncluido:
 
 igualdadDeConjuntos:
     ;LOOP CONJUNTO A
-
     inc     qword[contadorExterno]          ;Inicializo contador externo en 0
     mov     qword[contadorInterno],-1       ;Inicializo contador interno en -1
     
@@ -412,7 +413,6 @@ igualdadDeConjuntos:
     je      verificarLongitud
 
     loopConjuntoB:
-        
         inc     qword[contadorInterno]      ;Incremento contador interno
 
         mov     rsi,qword[contadorInterno]
@@ -435,7 +435,6 @@ igualdadDeConjuntos:
         jmp     loopConjuntoB               ;Sino, sigo recorriendo
 
         compararSegundoByte:
-            
             cmp     bh,byte[registro2]      ;Si los 2 ultimos caracteres son iguales
             je      igualdadDeConjuntos     ;significa que el elemento es el mismo y sigo con el siguiente
 
@@ -443,7 +442,6 @@ igualdadDeConjuntos:
     
 
 longitudConjunto:
-
     inc     qword[longitudDeConjunto]
 
     mov     rsi,qword[longitudDeConjunto]       
@@ -455,7 +453,6 @@ longitudConjunto:
     ret
 
 verificarLongitud:
-
     mov     qword[longitudDeConjunto],-1        ;Inicializo contador en -1
 
     mov     rcx,conjuntoA                       ;Muevo conjunto a evaluar a un registro
@@ -478,7 +475,6 @@ verificarLongitud:
     ret 
 
 finNoIguales:
-
     mov     rcx,msjConjuntosDistintos       ;Imprimo mensaje de error
     sub     rsp,32
     call    printf
@@ -488,7 +484,6 @@ finNoIguales:
 
 ; FUNCIONES DE CARGA
 cargarConjuntos:
-
     inc     rsi
 
     mov     rcx,msjIngreseConjunto
@@ -516,20 +511,12 @@ cargarConjuntos:
     je      completarConjuntoF
 
     continuarConjuntos:
-
-        mov     rcx,imprimirConjA
-        mov     rdx,conjuntoA
-        sub     rsp,32
-        call    printf
-        add     rsp,32
-
         cmp     rsi,qword[cantConjuntos]
         jl      cargarConjuntos
 
         ret
 
 completarConjuntoA:
-
     mov     rcx,buffer
     mov     rdx,formatoConjunto
     mov     r8,conjuntoA
@@ -540,7 +527,6 @@ completarConjuntoA:
     jmp     continuarConjuntos
 
 completarConjuntoB:
-
     mov     rcx,buffer
     mov     rdx,formatoConjunto
     mov     r8,conjuntoB
@@ -551,7 +537,6 @@ completarConjuntoB:
     jmp     continuarConjuntos
 
 completarConjuntoC:
-
     mov     rcx,buffer
     mov     rdx,formatoConjunto
     mov     r8,conjuntoC
@@ -562,7 +547,6 @@ completarConjuntoC:
     jmp     continuarConjuntos
 
 completarConjuntoD:
-
     mov     rcx,buffer
     mov     rdx,formatoConjunto
     mov     r8,conjuntoD
@@ -573,7 +557,6 @@ completarConjuntoD:
     jmp     continuarConjuntos
 
 completarConjuntoE:
-
     mov     rcx,buffer
     mov     rdx,formatoConjunto
     mov     r8,conjuntoE
@@ -584,7 +567,6 @@ completarConjuntoE:
     jmp     continuarConjuntos
 
 completarConjuntoF:
-
     mov     rcx,buffer
     mov     rdx,formatoConjunto
     mov     r8,conjuntoF
@@ -596,7 +578,6 @@ completarConjuntoF:
 
 ; FUNCIONES DE VALIDACION
 validarRango:
-
     mov     rax,1
     cmp     qword[cantConjuntos],1
     jle     rangoInvalido           ;Chequeo si el rango <= 1
@@ -606,7 +587,6 @@ validarRango:
     ret
 
 validarRangoOperacion:
-
     mov     rax,1
     cmp     qword[operacion],0
     jle     rangoInvalido           ;Chequeo si el rango <= 0
@@ -616,7 +596,6 @@ validarRangoOperacion:
     ret
 
 rangoInvalido:
-    
     mov     rax,0
     mov     rcx,msjRangoInvalido
     sub     rsp,32
