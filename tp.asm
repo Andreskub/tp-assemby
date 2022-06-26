@@ -4,6 +4,7 @@
 ;   -> Los elementos deben poseer 2 caracteres
 ;   -> Los conjuntos no deben tener elementos repetidos( ej: {a,a,b}={a,a,b,b}={a,b} )
 ;   -> Las operaciones se realizaran sobre los primeros 2 conjuntos ingresados por el usuario
+;   -> Para las operaciones de Conjuntos, el rango minimo de Conjuntos es 2
 ;
 
 global main
@@ -28,7 +29,7 @@ section .data
                              db  "-> Ingrese operacion: ",0
     
     formatoNumero            db  "%lli",0
-    formatoConjunto          db  "%s",0
+    formatoConjunto          db  "%40s",0       ;Solo toma los primeros 40 caracteres
 
     msjRangoInvalido         db  "Error! El rango ingresado es invalido",10,0
     msjElementoPertenece     db  "< El Elemento pertenece al conjunto >",10,0
@@ -496,6 +497,11 @@ cargarConjuntos:
     call    printf
     add     rsp,32
 
+    mov     rcx,buffer
+    sub     rsp,32
+    call    gets
+    add     rsp,32
+
     cmp	    rsi,1
     je      completarConjuntoA
     cmp	    rsi,2
@@ -511,6 +517,12 @@ cargarConjuntos:
 
     continuarConjuntos:
 
+        mov     rcx,imprimirConjA
+        mov     rdx,conjuntoA
+        sub     rsp,32
+        call    printf
+        add     rsp,32
+
         cmp     rsi,qword[cantConjuntos]
         jl      cargarConjuntos
 
@@ -518,54 +530,66 @@ cargarConjuntos:
 
 completarConjuntoA:
 
-    mov     rcx,conjuntoA
+    mov     rcx,buffer
+    mov     rdx,formatoConjunto
+    mov     r8,conjuntoA
     sub     rsp,32
-    call    gets
+    call    sscanf
     add     rsp,32
 
     jmp     continuarConjuntos
 
 completarConjuntoB:
 
-    mov     rcx,conjuntoB
+    mov     rcx,buffer
+    mov     rdx,formatoConjunto
+    mov     r8,conjuntoB
     sub     rsp,32
-    call    gets
+    call    sscanf
     add     rsp,32
 
     jmp     continuarConjuntos
 
 completarConjuntoC:
 
-    mov     rcx,conjuntoC
+    mov     rcx,buffer
+    mov     rdx,formatoConjunto
+    mov     r8,conjuntoC
     sub     rsp,32
-    call    gets
+    call    sscanf
     add     rsp,32
 
     jmp     continuarConjuntos
 
 completarConjuntoD:
 
-    mov     rcx,conjuntoD
+    mov     rcx,buffer
+    mov     rdx,formatoConjunto
+    mov     r8,conjuntoD
     sub     rsp,32
-    call    gets
+    call    sscanf
     add     rsp,32
 
     jmp     continuarConjuntos
 
 completarConjuntoE:
 
-    mov     rcx,conjuntoE
+    mov     rcx,buffer
+    mov     rdx,formatoConjunto
+    mov     r8,conjuntoE
     sub     rsp,32
-    call    gets
+    call    sscanf
     add     rsp,32
 
     jmp     continuarConjuntos
 
 completarConjuntoF:
 
-    mov     rcx,conjuntoF
+    mov     rcx,buffer
+    mov     rdx,formatoConjunto
+    mov     r8,conjuntoF
     sub     rsp,32
-    call    gets
+    call    sscanf
     add     rsp,32
 
     jmp     continuarConjuntos
@@ -574,8 +598,8 @@ completarConjuntoF:
 validarRango:
 
     mov     rax,1
-    cmp     qword[cantConjuntos],0
-    jle     rangoInvalido           ;Chequeo si el rango <= 0
+    cmp     qword[cantConjuntos],1
+    jle     rangoInvalido           ;Chequeo si el rango <= 1
     cmp     qword[cantConjuntos],6
     jg      rangoInvalido           ;Chequeo si el rango > 6
 
