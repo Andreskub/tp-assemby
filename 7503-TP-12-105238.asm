@@ -7,6 +7,11 @@
 ;   -> Para las operaciones de Conjuntos, el rango minimo de Conjuntos es 2
 ;
 
+
+;REVISAR CALL Y JMP
+
+;EL CALL NECESITA UN RET
+
 global main
 extern gets
 extern puts
@@ -40,6 +45,7 @@ section .data
     msjConjuntoIncluido      db  "< El conjunto A esta incluido en B >",10,0
     msjConjuntoIncluido2     db  "< El conjunto B esta incluido en A >",10,0
     msjConjuntoNoIncluido    db  "Error! Tanto el conjunto A como B no poseen inclusion",10,0
+    msjConjuntoUnion         db  "< La union de A y B es: %s >"
     
     ;Prueba
     imprimir                 db  "%lli",10,0
@@ -65,7 +71,7 @@ section .data
     registro1                dq  0
     registro2                dq  0
     auxIndice                dq  0
-
+    indiceUnion              dq  0
 
 section .bss
 
@@ -79,8 +85,8 @@ section .bss
     conjuntoE       resb    41
     conjuntoF       resb    41
     ElementoA       resb    3
-
-    conjuntoLong    resb    41
+    conjuntoAux     resb    41
+    conjuntoUnion   resb    81
 
 
 section .text
@@ -89,7 +95,6 @@ main:
 
 
 preguntarOperacion:
-
     mov     rcx,msjIngreseOperacion
     sub     rsp,32
     call    puts
@@ -188,39 +193,112 @@ handleInclusion:
     ret
 
 handleUnion:
+    call    preguntarCantidadDeConjuntos    ;Cargo conjuntos
+    
+    mov     qword[contadorInterno],-1       ;Inicializo contador interno en -1
+
+    copiarConjuntoAuxiliar:
+        inc     qword[contadorInterno]      ;Incremento contador interno
+        
+        mov     rsi,qword[contadorInterno]
+        mov     al,byte[conjuntoA + rsi]        ;Almaceno 1er caracter del elemento
+        mov     byte[registro1],al
+
+        cmp     byte[registro1],0
+        je      terminarLoop
+
+        mov     byte[conjuntoAux + rsi],al
+
+        mov     rsi,qword[conjuntoAux]
+        mov     qword[conjuntoUnion],rsi        ;Guardo conjunto en variable
+
+        jmp     copiarConjuntoAuxiliar          ;Loop si no finalizo de evaluar el conjunto
+
+    terminarLoop:
+        mov     rsi,qword[contadorInterno]
+        mov     qword[indiceUnion],rsi          ;Almaceno en variable el contador
+    
+        mov     qword[contadorExterno],-1       ;Seteo contador externo para operacion union
+        call    unionDeConjuntos                ;Llamado a funcion union
 
     ret
 
+;
+;  OPERACIONES
+;
+unionDeConjuntos:
+    ;LOOP CONJUNTO A
+    inc     qword[contadorExterno]          ;Inicializo contador externo en 0
+    mov     qword[contadorInterno],-1       ;Inicializo contador interno en -1
+    
+    mov     rsi,qword[contadorExterno]
+    mov     al,byte[conjuntoA + rsi]        ;Almaceno 1er caracter del elemento
+    mov     byte[registro1],al
+    
+    cmp     byte[registro1],0               ;Condicion si es salto de linea (ultimo caracter)
+    je      imprimirUnion
 
-preguntarCantidadDeConjuntos:
-    mov     rcx,msjIngreseCantConjuntos
+    inc     qword[contadorExterno]          ;Incremento contador externo
+
+    mov     rsi,qword[contadorExterno]
+    mov     ah,byte[conjuntoA + rsi]        ;Almaceno 2do caracter del elemento
+    mov     byte[registro2],ah 
+
+    cmp     byte[registro2],0               ;Condicion si es salto de linea (ultimo caracter)
+    je      imprimirUnion
+
+    loopUnionDeConjuntos:
+        inc     qword[contadorInterno]      ;Incremento contador interno
+
+        mov     rsi,qword[contadorInterno]
+        mov     bl,byte[conjuntoB + rsi]    ;Almaceno 1er caracter del elemento
+
+        cmp     bl,0                        ;Condicion si es salto de linea (ultimo caracter)
+        je      unionDeConjuntos
+
+        inc     qword[contadorInterno]      ;Incremento contador interno
+
+        mov     rsi,qword[contadorInterno]
+        mov     bh,byte[conjuntoB + rsi]    ;Almaceno 2do caracter del elemento
+
+        cmp     bh,0                        ;Condicion si es salto de linea (ultimo caracter)
+        je      unionDeConjuntos
+
+        cmp     bl,byte[registro1]          ;Comparo los dos primeros caracteres
+        je      compararSegundoByteUni      ;Si son iguales evaluo el segundo caracter del elemento
+
+        jmp     agregarAConjunto
+
+        compararSegundoByteUni:
+            cmp     bh,byte[registro2]              ;Si los 2 ultimos caracteres son iguales
+            jne     agregarAConjunto                ;significa que el elemento es el mismo y sigo con el siguiente
+
+            jmp     loopUnionDeConjuntos            ;Sino, sigo recorriendo
+
+        agregarAConjunto:
+            mov     rsi,qword[indiceUnion]          
+            mov     byte[conjuntoUnion + rsi],bl    ;Almaceno primer caracter en variable final
+
+            inc     qword[indiceUnion]              ;incremento contador de union
+
+            mov     rsi,qword[indiceUnion] 
+            mov     byte[conjuntoUnion + rsi],bh    ;Almaceno segundo caracter en variable final
+
+            mov     rsi,qword[conjuntoUnion]
+            mov     qword[conjuntoAux],rsi
+
+            inc     qword[indiceUnion]              ;incremento contador de union
+
+            jmp     loopUnionDeConjuntos
+
+imprimirUnion:
+    mov     rcx,msjConjuntoUnion
+    mov     rdx,conjuntoUnion
     sub     rsp,32
-    call    puts
+    call    printf
     add     rsp,32
-
-    mov     rcx,buffer
-    sub     rsp,32
-    call    gets
-    add     rsp,32
-
-    mov     rcx,buffer
-    mov     rdx,formatoNumero
-    mov     r8,cantConjuntos
-    sub     rsp,32
-    call    sscanf
-    add     rsp,32
-
-    call    validarRango
-    cmp     rax,0
-    je      preguntarCantidadDeConjuntos
-
-    mov     rsi,0                           ;Seteo en 0 iterador de conjuntos
-    call    cargarConjuntos
 
     ret
-
-
-;OPERACIONES
 
 pertenenciaDeElemento:
     ;LOOP CONJUNTO A
@@ -341,7 +419,6 @@ verificarInlusion:
     mov     qword[longitudDeConjunto],-1        ;Inicializo contador en -1
 
     mov     rcx,conjuntoA                       ;Muevo conjunto a evaluar a un registro
-
     call    longitudConjunto                    ;Evaluo longitud de conjunto
 
     mov     rax,qword[longitudDeConjunto]
@@ -352,6 +429,15 @@ verificarInlusion:
     cmp     rbx,qword[auxIndice]                ;Comparo longitud obtenida con contador
     jne     verificarInlusion2                  ;Si son distintos el conjunto no se recorrio completo por lo cual evaluamos el segundo conjunto                     
 
+
+    ;
+    ;
+    ;REVISAR QUE SEA MAYOR O IGUAL PARA PODER REPETIR ELEMENTO EN CONJUNTO 
+    ;
+    ;
+
+
+
     mov     rcx,msjConjuntoIncluido             ;Sino, los conjuntos son iguales
     sub     rsp,32
     call    printf
@@ -361,8 +447,8 @@ verificarInlusion:
 
 verificarInlusion2:
     mov     qword[longitudDeConjunto],-1
-    mov     rcx,conjuntoB                       ;Muevo conjunto a evaluar a un registro
 
+    mov     rcx,conjuntoB                       ;Muevo conjunto a evaluar a un registro
     call    longitudConjunto                    ;Evaluo longitud de conjunto
 
     mov     rax,qword[longitudDeConjunto]
@@ -483,6 +569,33 @@ finNoIguales:
     ret
 
 ; FUNCIONES DE CARGA
+preguntarCantidadDeConjuntos:
+    mov     rcx,msjIngreseCantConjuntos
+    sub     rsp,32
+    call    puts
+    add     rsp,32
+
+    mov     rcx,buffer
+    sub     rsp,32
+    call    gets
+    add     rsp,32
+
+    mov     rcx,buffer
+    mov     rdx,formatoNumero
+    mov     r8,cantConjuntos
+    sub     rsp,32
+    call    sscanf
+    add     rsp,32
+
+    call    validarRango
+    cmp     rax,0
+    je      preguntarCantidadDeConjuntos
+
+    mov     rsi,0                           ;Seteo en 0 iterador de conjuntos
+    call    cargarConjuntos
+
+    ret
+
 cargarConjuntos:
     inc     rsi
 

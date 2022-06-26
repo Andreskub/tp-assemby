@@ -1,21 +1,21 @@
 AS = nasm
 CC = gcc
 NASMFLAGS = win64
-MAIN = tp.asm
-OBJETO = tp.o
-EXEC = tp.exe
-FILES = tp.asm makefile  README.md
+MAIN = 7503-TP-12-105238
+OBJETO = 7503-TP-12-105238.o
+EXEC = 7503-TP-12-105238.exe
+FILES = 7503-TP-12-105238.asm makefile  README.md
 
 compile:
-	$(AS) -f $(NASMFLAGS) $(MAIN) -o $(OBJETO)
-	$(CC) ./$(OBJETO) -o $(EXEC)
+	$(AS) -f $(NASMFLAGS) $(MAIN).asm -o $(OBJETO)
+	$(CC) $(OBJETO) -o $(EXEC)
 
 run: compile
-	cls	
+	cls 			
 	- ./$(EXEC)
 
 zip: 
-	zip -r $(EXEC).zip *.c *.h $(FILES)
+	zip -r $(MAIN).zip $(FILES)
 
 .PHONY: clean
 clean:
