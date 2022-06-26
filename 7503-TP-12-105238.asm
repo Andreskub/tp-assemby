@@ -45,7 +45,7 @@ section .data
     msjConjuntoIncluido      db  "< El conjunto A esta incluido en B >",10,0
     msjConjuntoIncluido2     db  "< El conjunto B esta incluido en A >",10,0
     msjConjuntoNoIncluido    db  "Error! Tanto el conjunto A como B no poseen inclusion",10,0
-    msjConjuntoUnion         db  "< La union de A y B es: %s >"
+    msjConjuntoUnion         db  "< La union de A y B es: %s >",10,0
     
     ;Prueba
     imprimir                 db  "%lli",10,0
@@ -93,7 +93,6 @@ section .text
 
 main:
 
-
 preguntarOperacion:
     mov     rcx,msjIngreseOperacion
     sub     rsp,32
@@ -124,9 +123,6 @@ preguntarOperacion:
     je      handleInclusion
     cmp	    byte[operacion],4
     je      handleUnion
-
-    ;cmp	    byte[operacion],'*'
-    ;jne     preguntarOperacion
 
     ret
 
@@ -264,10 +260,16 @@ unionDeConjuntos:
         cmp     bh,0                        ;Condicion si es salto de linea (ultimo caracter)
         je      unionDeConjuntos
 
+        cmp     bl,'*'
+        je      loopUnionDeConjuntos
+
         cmp     bl,byte[registro1]          ;Comparo los dos primeros caracteres
         je      compararSegundoByteUni      ;Si son iguales evaluo el segundo caracter del elemento
 
-        jmp     agregarAConjunto
+        cmp     bl,byte[registro1]
+        jne     agregarAConjunto
+
+        jmp     loopUnionDeConjuntos
 
         compararSegundoByteUni:
             cmp     bh,byte[registro2]              ;Si los 2 ultimos caracteres son iguales
@@ -276,6 +278,9 @@ unionDeConjuntos:
             jmp     loopUnionDeConjuntos            ;Sino, sigo recorriendo
 
         agregarAConjunto:
+            mov     byte[conjuntoB + (rsi-1)],'*'
+            mov     byte[conjuntoB + rsi],'*'
+
             mov     rsi,qword[indiceUnion]          
             mov     byte[conjuntoUnion + rsi],bl    ;Almaceno primer caracter en variable final
 
@@ -283,6 +288,12 @@ unionDeConjuntos:
 
             mov     rsi,qword[indiceUnion] 
             mov     byte[conjuntoUnion + rsi],bh    ;Almaceno segundo caracter en variable final
+
+            mov     rcx,imprimirConjA
+            mov     rdx,conjuntoUnion
+            sub     rsp,32
+            call    printf
+            add     rsp,32
 
             mov     rsi,qword[conjuntoUnion]
             mov     qword[conjuntoAux],rsi
@@ -428,15 +439,6 @@ verificarInlusion:
 
     cmp     rbx,qword[auxIndice]                ;Comparo longitud obtenida con contador
     jne     verificarInlusion2                  ;Si son distintos el conjunto no se recorrio completo por lo cual evaluamos el segundo conjunto                     
-
-
-    ;
-    ;
-    ;REVISAR QUE SEA MAYOR O IGUAL PARA PODER REPETIR ELEMENTO EN CONJUNTO 
-    ;
-    ;
-
-
 
     mov     rcx,msjConjuntoIncluido             ;Sino, los conjuntos son iguales
     sub     rsp,32
