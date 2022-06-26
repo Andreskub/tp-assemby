@@ -82,6 +82,73 @@ section .text
 
 main:
 
+
+preguntarOperacion:
+
+    mov     rcx,msjIngreseOperacion
+    sub     rsp,32
+    call    puts
+    add     rsp,32
+
+    mov     rcx,buffer
+    sub     rsp,32
+    call    gets
+    add     rsp,32
+
+    mov     rcx,buffer
+    mov     rdx,formatoNumero
+    mov     r8,operacion
+    sub     rsp,32
+    call    sscanf
+    add     rsp,32
+
+    call    validarRangoOperacion
+    cmp     rax,0
+    je      preguntarOperacion
+
+    ;cmp	    byte[operacion],1
+    ;je      xyz
+    cmp	    byte[operacion],2
+    je      handleIgualdad
+    cmp	    byte[operacion],3
+    je      handleInclusion
+    ;cmp	    byte[operacion],4
+    ;je      completarConjuntoD
+
+    ;cmp	    byte[operacion],'*'
+    ;jne     preguntarOperacion
+
+    ret
+
+handlePertenencia:
+
+
+
+handleIgualdad:
+
+    call    preguntarCantidadDeConjuntos    ;Cargo conjuntos
+
+    mov     qword[contadorExtra],0
+    mov     qword[contadorExterno],-1       ;Seteo contador externo para operacion igualdad
+
+    call    igualdadDeConjuntos             ;Llamado a funcion
+
+    ret
+
+handleInclusion:
+
+    call    preguntarCantidadDeConjuntos    ;Cargo conjuntos
+
+    mov     qword[contadorExtra],0
+    mov     qword[contadorExterno],-1       ;Seteo contador externo para operacion igualdad
+
+    call    inclusionDeConjuntos            ;Llamado a funcion
+
+    ret
+
+handleUnion:
+
+
 preguntarCantidadDeConjuntos:
 
     mov     rcx,msjIngreseConjuntos
@@ -108,52 +175,10 @@ preguntarCantidadDeConjuntos:
     mov     rsi,0                           ;Seteo en 0 iterador de conjuntos
     call    cargarConjuntos
 
-    mov     qword[contadorExterno],-1       ;Seteo contador externo para operacion igualdad
-
-    call    preguntarOperacion
-
-
     ret
 
 
-preguntarOperacion:
-
-    mov     rcx,msjIngreseOperacion
-    sub     rsp,32
-    call    puts
-    add     rsp,32
-
-    mov     rcx,buffer
-    sub     rsp,32
-    call    gets
-    add     rsp,32
-
-    mov     rcx,buffer
-    mov     rdx,formatoNumero
-    mov     r8,operacion
-    sub     rsp,32
-    call    sscanf
-    add     rsp,32
-
-    call    validarRangoOperacion
-    cmp     rax,0
-    je      preguntarOperacion
-
-
-    mov     qword[contadorExtra],0
-    mov     qword[contadorExterno],-1
-
-
-    cmp	    byte[operacion],1
-    je      inclusionDeConjuntos
-    cmp	    byte[operacion],2
-    je      igualdadDeConjuntos
-    ;cmp	    byte[operacion],3
-    ;je      completarConjuntoC
-    ;cmp	    byte[operacion],4
-    ;je      completarConjuntoD
-
-    ret
+;OPERACIONES
 
 inclusionDeConjuntos:
     ;LOOP CONJUNTO A
@@ -403,7 +428,6 @@ cargarConjuntos:
 
     ret
 
-; FUNCIONES DE CARGA
 completarConjuntoA:
 
     mov     rcx,conjuntoA
@@ -459,25 +483,14 @@ completarConjuntoF:
     jmp     continuarConjuntos
 
 
-
 ; FUNCIONES DE VALIDACION
 validarRango:
 
     mov     rax,1
     cmp     qword[cantConjuntos],0
-    jle     rangoInvalido           ;Chequeo si el rango < 0
+    jle     rangoInvalido           ;Chequeo si el rango <= 0
     cmp     qword[cantConjuntos],6
     jg      rangoInvalido           ;Chequeo si el rango > 6
-    ret
-
-rangoInvalido:
-
-    mov     rax,0
-
-    mov     rcx,msjRangoInvalido
-    sub     rsp,32
-    call    puts
-    add     rsp,32
 
     ret
 
@@ -485,7 +498,18 @@ validarRangoOperacion:
 
     mov     rax,1
     cmp     qword[operacion],0
-    jle     rangoInvalido           ;Chequeo si el rango < 0
+    jle     rangoInvalido           ;Chequeo si el rango <= 0
     cmp     qword[operacion],4
-    jg      rangoInvalido           ;Chequeo si el rango > 6
+    jg      rangoInvalido           ;Chequeo si el rango > 4
+
+    ret
+
+rangoInvalido:
+    
+    mov     rax,0
+    mov     rcx,msjRangoInvalido
+    sub     rsp,32
+    call    puts
+    add     rsp,32
+
     ret
