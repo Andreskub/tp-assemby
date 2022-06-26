@@ -16,8 +16,10 @@ extern sscanf
 
 section .data
 
-    msjIngreseConjuntos      db  "-> Ingrese la cantidad de conjuntos:",0
+    msjIngreseCantConjuntos  db  "-> Ingrese la cantidad de conjuntos:",0
     msjIngreseConjunto       db  "-> Ingrese el conjutno %lli:",10,0
+    msjIngreseConjunto2      db  "-> Ingrese el conjutno:",10,0
+    msjIngreseElemento       db  "-> Ingrese el elemento:",10,0
     msjIngreseOperacion      db  "*",10
                              db  "| Operaciones disponibles",10
                              db  "| 1) Pertenencia de un conjunto a otro",10
@@ -44,6 +46,8 @@ section .data
     imprimirInt              db  "[conjuntoInt + rsi]: %c",10,0
 
     msjRangoInvalido         db  "Error! El rango ingresado es invalido",10,0
+    msjElementoPertenece     db  "< El Elemento pertenece al conjunto >",10,0
+    msjElementoNoPertenece   db  "Error! El Elemento no pertenece al conjunto >",10,0
     msjConjuntosIguales      db  "< Los conjuntos A y B son iguales >",10,0
     msjConjuntosDistintos    db  "< Los conjuntos A y B no son iguales >",10,0
     msjConjuntoIncluido      db  "< El conjunto A esta incluido en B >",10,0
@@ -74,6 +78,7 @@ section .bss
     conjuntoD       resb    500
     conjuntoE       resb    500
     conjuntoF       resb    500
+    ElementoA       resb    500
 
     conjuntoLong    resb    500
 
@@ -106,8 +111,8 @@ preguntarOperacion:
     cmp     rax,0
     je      preguntarOperacion
 
-    ;cmp	    byte[operacion],1
-    ;je      xyz
+    cmp	    byte[operacion],1
+    je      handlePertenencia
     cmp	    byte[operacion],2
     je      handleIgualdad
     cmp	    byte[operacion],3
@@ -121,8 +126,33 @@ preguntarOperacion:
     ret
 
 handlePertenencia:
+    
+    mov     rcx,msjIngreseConjunto2
+    sub     rsp,32
+    call    printf
+    add     rsp,32
 
+    mov     rcx,conjuntoA
+    sub     rsp,32
+    call    gets
+    add     rsp,32
 
+    mov     rcx,msjIngreseElemento
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
+    mov     rcx,ElementoA
+    sub     rsp,32
+    call    gets
+    add     rsp,32
+
+    mov     qword[contadorExtra],0
+    mov     qword[contadorExterno],-1       ;Seteo contador externo para operacion igualdad
+
+    call    pertenenciaDeElemento           ;Llamado a funcion
+
+    ret
 
 handleIgualdad:
 
@@ -151,7 +181,7 @@ handleUnion:
 
 preguntarCantidadDeConjuntos:
 
-    mov     rcx,msjIngreseConjuntos
+    mov     rcx,msjIngreseCantConjuntos
     sub     rsp,32
     call    puts
     add     rsp,32
@@ -179,6 +209,69 @@ preguntarCantidadDeConjuntos:
 
 
 ;OPERACIONES
+
+pertenenciaDeElemento:
+    ;LOOP CONJUNTO A
+    inc     qword[contadorExterno]          ;Inicializo contador externo en 0
+    
+    mov     rsi,qword[contadorExterno]
+    mov     al,byte[conjuntoA + rsi]        ;Almaceno 1er caracter del elemento
+    mov     byte[registro1],al
+
+    cmp     byte[registro1],0               ;Comparo los dos primeros caracteres
+    je      finElementoNoPertence
+
+    inc     qword[contadorExterno]          ;Incremento contador externo
+
+    mov     rsi,qword[contadorExterno]
+    mov     ah,byte[conjuntoA + rsi]        ;Almaceno 2do caracter del elemento
+    mov     byte[registro2],ah 
+
+    cmp     byte[registro2],0               ;Comparo los dos primeros caracteres
+    je      finElementoNoPertence
+
+    loopPertenenciaDeElemento:
+
+        mov     bl,byte[ElementoA]                  ;Almaceno 1er caracter del elemento
+
+        cmp     bl,0                                ;Condicion si es salto de linea (ultimo caracter)
+        je      pertenenciaDeElemento
+
+        mov     rsi,1
+        mov     bh,byte[ElementoA + rsi]            ;Almaceno 2do caracter del elemento
+
+        cmp     bh,0                                ;Condicion si es salto de linea (ultimo caracter)
+        je      pertenenciaDeElemento
+
+        cmp     bl,byte[registro1]                  ;Comparo los dos primeros caracteres
+        je      compararSegundoBytePertenencia      ;Si son iguales evaluo el segundo caracter del elemento
+
+        jmp     pertenenciaDeElemento
+
+        compararSegundoBytePertenencia:
+
+            cmp     bh,byte[registro2]              ;Si los 2 ultimos caracteres son iguales
+            je      finElementoPertenece            ;El elemento pertenece a Conjunto
+
+            jmp     pertenenciaDeElemento           ;Sino, sigo recorriendo
+
+finElementoNoPertence:
+
+    mov     rcx,msjElementoNoPertenece      ;Imprimo mensaje de error
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+    
+    ret
+
+finElementoPertenece:
+
+    mov     rcx,msjElementoPertenece        ;Imprimo mensaje de error
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+    
+    ret
 
 inclusionDeConjuntos:
     ;LOOP CONJUNTO A
