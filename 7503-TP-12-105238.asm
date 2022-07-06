@@ -35,12 +35,12 @@ section .data
     msjRangoInvalido         db  "Error! El rango ingresado es invalido",10,0
     msjElementoPertenece     db  "< El Elemento pertenece al conjunto >",10,0
     msjElementoNoPertenece   db  "Error! El Elemento no pertenece al conjunto >",10,0
-    msjConjuntosIguales      db  "< Los conjuntos A y B son iguales >",10,0
-    msjConjuntosDistintos    db  "< Los conjuntos A y B no son iguales >",10,0
-    msjConjuntoIncluido      db  "< El conjunto A esta incluido en B >",10,0
-    msjConjuntoIncluido2     db  "< El conjunto B esta incluido en A >",10,0
-    msjConjuntoNoIncluido    db  "Error! Tanto el conjunto A como B no poseen inclusion",10,0
-    msjConjuntoUnion         db  "< La union de A y B es: %s >",10,0
+    msjConjuntosIguales      db  "< Los conjuntos 1 y 2 son iguales >",10,0
+    msjConjuntosDistintos    db  "< Los conjuntos 1 y 2 no son iguales >",10,0
+    msjConjuntoIncluido      db  "< El conjunto 1 esta incluido en 2 >",10,0
+    msjConjuntoIncluido2     db  "< El conjunto 2 esta incluido en 1 >",10,0
+    msjConjuntoNoIncluido    db  "Error! Tanto el conjunto 1 como 2 no poseen inclusion",10,0
+    msjConjuntoUnion         db  "< La union de 1 y 2 es: %s >",10,0
 
     longitudDeConjunto       dq  0
     contadorExterno          dq  0
@@ -108,7 +108,7 @@ preguntarOperacion:
     ret
 
 handlePertenencia:
-    mov     rcx,msjIngreseConjunto2
+    mov     rcx,msjIngreseConjunto2         ;Ingreso Conjunto
     sub     rsp,32
     call    printf
     add     rsp,32
@@ -125,7 +125,7 @@ handlePertenencia:
     call    sscanf
     add     rsp,32
 
-    mov     rcx,msjIngreseElemento
+    mov     rcx,msjIngreseElemento          ;Ingreso elemento
     sub     rsp,32
     call    printf
     add     rsp,32
@@ -247,7 +247,7 @@ unionDeConjuntos:
         cmp     bl,byte[registro1]          ;Comparo los dos primeros caracteres
         je      compararSegundoByteUni      ;Si son iguales evaluo el segundo caracter del elemento
 
-        cmp     bl,byte[registro1]
+        cmp     bl,byte[registro1]          ;ACA FALLA DEBIDO A QUE NO SE REVISAR CONJUNTO AUX
         jne     agregarAConjunto
 
         jmp     loopUnionDeConjuntos
@@ -269,12 +269,6 @@ unionDeConjuntos:
 
             mov     rsi,qword[indiceUnion] 
             mov     byte[conjuntoUnion + rsi],bh    ;Almaceno segundo caracter en variable final
-
-            mov     rcx,imprimirConjA
-            mov     rdx,conjuntoUnion
-            sub     rsp,32
-            call    printf
-            add     rsp,32
 
             mov     rsi,qword[conjuntoUnion]
             mov     qword[conjuntoAux],rsi
@@ -373,6 +367,7 @@ inclusionDeConjuntos:
     je      verificarInlusion
 
     loopConjuntoBInc:
+        ;LOOP ELEMENTO
         inc     qword[contadorInterno]      ;Incremento contador interno
 
         mov     rsi,qword[contadorInterno]
@@ -416,7 +411,7 @@ verificarInlusion:
     mov     rax,qword[longitudDeConjunto]
     mov     qword[auxIndice],rax
 
-    mov     rbx,qword[contadorExtra]            ;Contador Conjunto A
+    mov     rbx,qword[contadorExtra]            ;Contador exitosos
 
     cmp     rbx,qword[auxIndice]                ;Comparo longitud obtenida con contador
     jne     verificarInlusion2                  ;Si son distintos el conjunto no se recorrio completo por lo cual evaluamos el segundo conjunto                     
@@ -437,7 +432,7 @@ verificarInlusion2:
     mov     rax,qword[longitudDeConjunto]
     mov     qword[auxIndice],rax
 
-    mov     rbx,qword[contadorExtra]            ;Contador Conjunto A
+    mov     rbx,qword[contadorExtra]            ;Contador exitosos
 
     cmp     rbx,qword[auxIndice]                ;Comparo longitud obtenida con contador
     jne     finNoIncluido
@@ -456,7 +451,6 @@ finNoIncluido:
     add     rsp,32
     
     ret
-
 
 igualdadDeConjuntos:
     ;LOOP CONJUNTO A
@@ -477,6 +471,8 @@ igualdadDeConjuntos:
     mov     rsi,qword[contadorExterno]
     mov     ah,byte[conjuntoA + rsi]        ;Almaceno 2do caracter del elemento
     mov     byte[registro2],ah 
+
+    mov     qword[contadorExtra],rsi
 
     cmp     byte[registro2],0               ;Condicion si es salto de linea (ultimo caracter)
     je      verificarLongitud
